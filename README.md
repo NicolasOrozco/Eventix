@@ -160,28 +160,6 @@ http://localhost:8080/index.html
 
 ---
 
-## 🗄️ Consola H2
-
-Para inspeccionar directamente las tablas creadas:
-
-**URL**
-
-```text
-http://localhost:8080/h2-console
-```
-
-**Parámetros**
-
-```text
-JDBC URL: jdbc:h2:mem:eventixdb
-User Name: sa
-Password:
-```
-
-(Dejar contraseña vacía)
-
----
-
 ## 🧪 Guía de Pruebas y Datos Iniciales
 
 El sistema carga automáticamente datos para pruebas.
@@ -296,10 +274,12 @@ Resultado esperado:
 ## Autor
 
 Proyecto académico desarrollado por:
+
 **- Leidy Suárez Álvarez**  
 **- Nicolás Orozco Osorio**  
 
 Desarrollado para:
+
 **Ingeniería de Software**  
 **Universidad del Quindío**  
 **2026**
