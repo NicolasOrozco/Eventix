@@ -1,10 +1,363 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eventix - Sistema de Boletas UQ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
+<body class="bg-gray-50 font-sans text-gray-800">
 
+<header class="bg-emerald-700 text-white shadow-md">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+        <div class="flex items-center space-x-3">
+            <div class="bg-white text-emerald-700 font-bold p-2 rounded-lg text-xl shadow">E</div>
+            <h1 class="text-2xl font-bold tracking-tight">Eventix <span class="text-xs bg-emerald-800 text-emerald-200 px-2 py-0.5 rounded-full">MVP v1.0</span></h1>
+        </div>
+        <nav class="flex space-x-2">
+            <button id="btnNavCompra" onclick="switchTab('compra')" class="px-4 py-2 rounded-md bg-emerald-800 font-medium transition shadow-sm">
+                🎟️ Registrar Compra
+            </button>
+            <button id="btnNavGestion" onclick="switchTab('gestion')" class="px-4 py-2 rounded-md hover:bg-emerald-600 font-medium transition">
+                ⚙️ Gestión de Eventos (CRUD)
+            </button>
+        </nav>
+    </div>
+</header>
+
+<main class="max-w-6xl mx-auto px-4 py-8">
+    <div id="globalAlert" class="hidden mb-6 p-4 rounded-lg font-medium shadow-sm border"></div>
+
+    <section id="sectionCompra" class="space-y-6">
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <h2 class="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                <span>🛒</span> Nueva Transacción de Venta
+            </h2>
+            <p class="text-sm text-gray-500 mb-6">Completa los campos para procesar la emisión de boletos vinculando cliente y evento principal.</p>
+
+            <form id="formCompra" onsubmit="procesarCompra(event)" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Identificación del Cliente (ID/CC):</label>
+                    <input type="text" id="compraClienteId" required placeholder="Ej: 1090274067" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none transition">
+                    <p class="text-xs text-gray-400 mt-1">Usa los IDs cargados en los datos de prueba (Ej: 1090274067, 1092852380).</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Seleccionar Evento de la Lista:</label>
+                    <select id="compraEventoId" required class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none transition bg-white"></select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Cantidad de Boletas (Máx. 5):</label>
+                    <input type="number" id="compraCantidad" min="1" max="10" value="1" required class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none transition">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Localidad / Tipo de Entrada:</label>
+                    <div class="flex gap-4">
+                        <label class="flex items-center gap-2 border p-2.5 rounded-lg w-full cursor-pointer hover:bg-gray-50">
+                            <input type="radio" name="compraTipo" value="general" checked class="text-emerald-600 focus:ring-emerald-500">
+                            <span class="text-sm font-medium">🎟️ Entrada General</span>
+                        </label>
+                        <label class="flex items-center gap-2 border p-2.5 rounded-lg w-full cursor-pointer hover:bg-gray-50">
+                            <input type="radio" name="compraTipo" value="vip" class="text-emerald-600 focus:ring-emerald-500">
+                            <span class="text-sm font-medium">✨ Entrada VIP</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="md:col-span-2 pt-2">
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-lg shadow transition">
+                        Confirmar y Generar Boletas
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div id="modalRecibo" class="hidden bg-emerald-50 border border-emerald-200 p-6 rounded-xl shadow-sm">
+            <h3 class="text-emerald-900 font-bold text-lg mb-2 flex items-center gap-2">✅ ¡Compra Registrada Exitosamente!</h3>
+            <div id="reciboContenido" class="text-sm text-emerald-800 space-y-1"></div>
+        </div>
+    </section>
+
+    <section id="sectionGestion" class="hidden space-y-6">
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <h3 id="formGestionTitulo" class="text-lg font-bold text-gray-900 mb-4">➕ Registrar Nuevo Evento de Negocio</h3>
+            <form id="formEvento" onsubmit="guardarEvento(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <input type="hidden" id="eventoId">
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-500 mb-1">Nombre:</label>
+                    <input type="text" id="evNombre" required class="w-full p-2 border rounded-md outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-500 mb-1">Fecha:</label>
+                    <input type="date" id="evFecha" required class="w-full p-2 border rounded-md outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-500 mb-1">Lugar:</label>
+                    <input type="text" id="evLugar" required class="w-full p-2 border rounded-md outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-500 mb-1">Capacidad Inicial:</label>
+                    <input type="number" id="evCapacidad" required class="w-full p-2 border rounded-md outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-500 mb-1">Precio General ($):</label>
+                    <input type="number" id="evPrecioGen" required class="w-full p-2 border rounded-md outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-500 mb-1">Precio VIP ($):</label>
+                    <input type="number" id="evPrecioVip" required class="w-full p-2 border rounded-md outline-none focus:border-emerald-500">
+                </div>
+                <div class="md:col-span-3 flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="resetFormEvento()" class="px-4 py-2 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 font-medium rounded-md transition">Limpiar</button>
+                    <button type="submit" class="px-5 py-2 text-sm text-white bg-emerald-600 hover:bg-emerald-700 font-bold rounded-md shadow transition">Guardar Registro</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="p-4 bg-gray-50 border-b flex justify-between items-center">
+                <h3 class="font-bold text-gray-700">Listado Maestro de Eventos</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                    <tr class="bg-gray-100 text-gray-600 text-xs uppercase tracking-wider font-semibold border-b">
+                        <th class="p-3">Nombre</th>
+                        <th class="p-3">Fecha</th>
+                        <th class="p-3">Lugar</th>
+                        <th class="p-3 text-center">Disponibles / Capacidad</th>
+                        <th class="p-3 text-right">Precio Gral</th>
+                        <th class="p-3 text-right">Precio VIP</th>
+                        <th class="p-3 text-center">Estado</th>
+                        <th class="p-3 text-center">Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody id="tablaEventosBody" class="text-sm divide-y"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</main>
+
+<script>
+    const API_BASE = "http://localhost:8080/api";
+    let listadoEventosLocal = [];
+
+    document.addEventListener("DOMContentLoaded", () => {
+        cargarEventos();
+    });
+
+    function switchTab(tab) {
+        const btnCompra = document.getElementById("btnNavCompra");
+        const btnGestion = document.getElementById("btnNavGestion");
+        const secCompra = document.getElementById("sectionCompra");
+        const secGestion = document.getElementById("sectionGestion");
+
+        if (tab === "compra") {
+            btnCompra.classList.add("bg-emerald-800");
+            btnGestion.classList.remove("bg-emerald-800");
+            secCompra.classList.remove("hidden");
+            secGestion.classList.add("hidden");
+        } else {
+            btnGestion.classList.add("bg-emerald-800");
+            btnCompra.classList.remove("bg-emerald-800");
+            secGestion.classList.remove("hidden");
+            secCompra.classList.add("hidden");
+        }
+        hideAlert();
+    }
+
+    function showAlert(msg, isSuccess = false) {
+        const alertDiv = document.getElementById("globalAlert");
+        alertDiv.innerText = msg;
+        alertDiv.className = `p-4 rounded-lg font-medium shadow-sm border ${isSuccess ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'}`;
+        alertDiv.classList.remove("hidden");
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function hideAlert() {
+        document.getElementById("globalAlert").classList.add("hidden");
+    }
+
+    async function cargarEventos() {
+        try {
+            const res = await fetch(`${API_BASE}/eventos`);
+            const data = await res.json();
+            listadoEventosLocal = data;
+
+            renderTablaEventos(data);
+            renderSelectEventos(data);
+        } catch (err) {
+            console.error("Error cargando eventos:", err);
+        }
+    }
+
+    function renderTablaEventos(eventos) {
+        const tbody = document.getElementById("tablaEventosBody");
+        tbody.innerHTML = "";
+        eventos.forEach(ev => {
+            const tr = document.createElement("tr");
+            tr.className = "hover:bg-gray-50 transition";
+            tr.innerHTML = `
+                    <td class="p-3 font-semibold text-gray-900">${ev.nombre}</td>
+                    <td class="p-3 text-gray-600">${ev.fecha}</td>
+                    <td class="p-3 text-gray-600">${ev.lugar}</td>
+                    <td class="p-3 text-center font-mono">${ev.boletasDisponibles} / ${ev.capacidad}</td>
+                    <td class="p-3 text-right text-emerald-700 font-medium">$${ev.precioGeneral.toLocaleString()}</td>
+                    <td class="p-3 text-right text-purple-700 font-medium">$${ev.precioVIP.toLocaleString()}</td>
+                    <td class="p-3 text-center">
+                        <span class="px-2 py-1 text-xs font-bold rounded-full ${ev.estaActivo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                            ${ev.estaActivo ? 'Activo' : 'Cancelado'}
+                        </span>
+                    </td>
+                    <td class="p-3 text-center space-x-1">
+                        <button onclick="cargarEditarEvento(${ev.id})" class="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 px-2 py-1 rounded border border-blue-200 font-medium transition">Editar</button>
+                        <button onclick="eliminarEvento(${ev.id})" class="text-xs bg-red-50 text-red-600 hover:bg-red-100 px-2 py-1 rounded border border-red-200 font-medium transition">Eliminar</button>
+                    </td>
+                `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function renderSelectEventos(eventos) {
+        const select = document.getElementById("compraEventoId");
+        select.innerHTML = "";
+        eventos.forEach(ev => {
+            const option = document.createElement("option");
+            option.value = ev.id;
+            option.innerText = `${ev.nombre} (${ev.estaActivo ? 'Disp: ' + ev.boletasDisponibles : 'CANCELADO'})`;
+            select.appendChild(option);
+        });
+    }
+
+    // CONTROL ACCIÓN: TRANSACCIÓN COMPRA
+    async function procesarCompra(e) {
+        e.preventDefault();
+        hideAlert();
+        document.getElementById("modalRecibo").classList.add("hidden");
+
+        const bodyObj = {
+            clienteId: document.getElementById("compraClienteId").value.trim(),
+            eventoId: parseInt(document.getElementById("compraEventoId").value),
+            cantidad: parseInt(document.getElementById("compraCantidad").value),
+            esVIP: document.querySelector('input[name="compraTipo"]:checked').value === "vip"
+        };
+
+        try {
+            const res = await fetch(`${API_BASE}/boletos/comprar`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(bodyObj)
+            });
+
+            if (!res.ok) {
+                const errMsg = await res.text();
+                showAlert(errMsg, false);
+            } else {
+                const boletos = await res.json();
+                showAlert("Compra ejecutada con éxito bajo reglas de negocio vigentes.", true);
+
+                // Mostrar resumen del comprobante procesado
+                const divRecibo = document.getElementById("modalRecibo");
+                const contRecibo = document.getElementById("reciboContenido");
+
+                let codigos = boletos.map(b => `<li>• Código Único: <strong>${b.codigo}</strong> (Valor: $${b.precio})</li>`).join("");
+                contRecibo.innerHTML = `
+                        <p><strong>Cliente Titular:</strong> ${boletos[0].cliente.nombre} (ID: ${boletos[0].cliente.id})</p>
+                        <p><strong>Evento:</strong> ${boletos[0].evento.nombre} (${boletos[0].esVIP ? 'Localidad VIP' : 'Localidad General'})</p>
+                        <p><strong>Fecha Operación:</strong> ${boletos[0].fechaCompra}</p>
+                        <ul class="mt-2 bg-white p-3 rounded border space-y-1 font-mono text-xs text-gray-700">${codigos}</ul>
+                    `;
+                divRecibo.classList.remove("hidden");
+
+                document.getElementById("formCompra").reset();
+                cargarEventos();
+            }
+        } catch (err) {
+            showAlert("Error crítico de comunicación con el servidor.", false);
+        }
+    }
+
+    // CONTROL ACCIÓN: GUARDAR / EDITAR EVENTO (CRUD)
+    async function guardarEvento(e) {
+        e.preventDefault();
+        hideAlert();
+
+        const id = document.getElementById("eventoId").value;
+        const bodyObj = {
+            nombre: document.getElementById("evNombre").value.trim(),
+            fecha: document.getElementById("evFecha").value,
+            lugar: document.getElementById("evLugar").value.trim(),
+            capacidad: parseFloat(document.getElementById("evCapacidad").value),
+            precioGeneral: parseFloat(document.getElementById("evPrecioGen").value),
+            precioVIP: parseFloat(document.getElementById("evPrecioVip").value),
+            estaActivo: true
+        };
+
+        const url = id ? `${API_BASE}/eventos/${id}` : `${API_BASE}/eventos`;
+        const method = id ? 'PUT' : 'POST';
+
+        try {
+            const res = await fetch(url, {
+                method: method,
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(bodyObj)
+            });
+
+            if (!res.ok) {
+                const errMsg = await res.text();
+                showAlert(errMsg, false);
+            } else {
+                showAlert("El evento fue guardado de manera exitosa en el repositorio persistente.", true);
+                resetFormEvento();
+                cargarEventos();
+            }
+        } catch (err) {
+            showAlert("Error al intentar guardar el evento.", false);
+        }
+    }
+
+    function cargarEditarEvento(id) {
+        const ev = listadoEventosLocal.find(item => item.id === id);
+        if (!ev) return;
+
+        document.getElementById("eventoId").value = ev.id;
+        document.getElementById("evNombre").value = ev.nombre;
+        document.getElementById("evFecha").value = ev.fecha;
+        document.getElementById("evLugar").value = ev.lugar;
+        document.getElementById("evCapacidad").value = ev.capacidad;
+        document.getElementById("evPrecioGen").value = ev.precioGeneral;
+        document.getElementById("evPrecioVip").value = ev.precioVIP;
+
+        document.getElementById("formGestionTitulo").innerText = "📝 Modificar Evento Existente";
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function eliminarEvento(id) {
+        if (!confirm("¿Está completamente seguro de eliminar este evento?")) return;
+        hideAlert();
+
+        try {
+            const res = await fetch(`${API_BASE}/eventos/${id}`, { method: 'DELETE' });
+            if (!res.ok) {
+                const errMsg = await res.text();
+                showAlert(errMsg, false);
+            } else {
+                showAlert("Registro eliminado de manera definitiva del sistema.", true);
+                cargarEventos();
+            }
+        } catch (err) {
+            showAlert("Error al procesar la solicitud de eliminación.", false);
+        }
+    }
+
+    function resetFormEvento() {
+        document.getElementById("formEvento").reset();
+        document.getElementById("eventoId").value = "";
+        document.getElementById("formGestionTitulo").innerText = "➕ Registrar Nuevo Evento de Negocio";
+    }
+</script>
 </body>
 </html>
