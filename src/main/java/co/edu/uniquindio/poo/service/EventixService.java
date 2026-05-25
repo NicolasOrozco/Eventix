@@ -31,12 +31,61 @@ public class EventixService {
         return eventoRepository.findAll();
     }
 
-    public Evento guardarEvento(Evento evento) {
-        // RN-02: La fecha del evento debe ser futura [cite: 414]
+    /**
+     * Registra un nuevo evento inicializando el stock de boletas al 100% de su capacidad.
+     */
+    public Evento crearEvento(Evento evento) {
+        validarInvariantes(evento);
+
+        // Regla: Al crear, las boletas disponibles equivalen exactamente a su capacidad total
+        evento.setBoletasDisponibles(evento.getCapacidad());
+        evento.setEstaActivo(true); // Los nuevos siempre inician activos
+
+        return eventoRepository.save(evento);
+    }
+
+    /**
+     * Modifica un evento existente protegiendo el stock de boletas ya vendidas y permitiendo cancelaciones.
+     */
+    @Transactional
+    public Evento actualizarEvento(Long id, Evento nuevoEvento) {
+        Evento existente = eventoRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Evento no encontrado."));
+
+        validarInvariantes(nuevoEvento);
+
+        // Calcular cuántas boletas se han vendido hasta el momento
+        double boletasVendidas = existente.getCapacidad() - existente.getBoletasDisponibles();
+
+        // Validación de seguridad: No puedes reducir la capacidad por debajo de lo ya vendido
+        if (nuevoEvento.getCapacidad() < boletasVendidas) {
+            throw new IllegalArgumentException("Invariante violada: La nueva capacidad (" + nuevoEvento.getCapacidad() +
+                    ") no puede ser inferior a las boletas ya vendidas (" + boletasVendidas + ").");
+        }
+
+        // Actualizamos campos manteniendo la consistencia del Stock
+        existente.setNombre(nuevoEvento.getNombre());
+        existente.setFecha(nuevoEvento.getFecha());
+        existente.setLugar(nuevoEvento.getLugar());
+        existente.setCapacidad(nuevoEvento.getCapacidad());
+        existente.setBoletasDisponibles(nuevoEvento.getCapacidad() - boletasVendidas); // Ajuste dinámico de remanente
+        existente.setPrecioGeneral(nuevoEvento.getPrecioGeneral());
+        existente.setPrecioVIP(nuevoEvento.getPrecioVIP());
+
+        // Solución Detalle 2: Ahora acepta el estado enviado desde la pantalla
+        existente.setEstaActivo(nuevoEvento.isEstaActivo());
+
+        return eventoRepository.save(existente);
+    }
+
+    /**
+     * Centralización de validaciones de reglas de negocio e invariantes.
+     */
+    private void validarInvariantes(Evento evento) {
+        // RN-02: La fecha del evento debe ser futura
         if (evento.getFecha() == null || evento.getFecha().isBefore(LocalDate.now().plusDays(1))) {
             throw new IllegalArgumentException("Invariante violada: La fecha del evento debe ser futura.");
         }
-        // Invariantes del modelo
         if (evento.getCapacidad() <= 0) {
             throw new IllegalArgumentException("La capacidad debe ser mayor a cero.");
         }
@@ -46,12 +95,6 @@ public class EventixService {
         if (evento.getPrecioVIP() <= evento.getPrecioGeneral()) {
             throw new IllegalArgumentException("Invariante violada: El precio VIP debe ser estrictamente mayor al precio general.");
         }
-
-        // Al crear un evento nuevo, las boletas disponibles equivalen a su capacidad total
-        if (evento.getId() == null) {
-            evento.setBoletasDisponibles(evento.getCapacidad());
-        }
-        return eventoRepository.save(evento);
     }
 
     public void eliminarEvento(Long id) {

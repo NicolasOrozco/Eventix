@@ -26,7 +26,7 @@ public class EventoController {
     @PostMapping
     public ResponseEntity<?> crear(@RequestBody Evento evento) {
         try {
-            return ResponseEntity.ok(service.guardarEvento(evento));
+            return ResponseEntity.ok(service.crearEvento(evento));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -35,8 +35,7 @@ public class EventoController {
     @PutMapping("/{id}")
     public ResponseEntity<?> actualizar(@PathVariable Long id, @RequestBody Evento evento) {
         try {
-            evento.setId(id);
-            return ResponseEntity.ok(service.guardarEvento(evento));
+            return ResponseEntity.ok(service.actualizarEvento(id, evento));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
