@@ -1,5 +1,11 @@
 package co.edu.uniquindio.poo.dto;
 
+/**
+ * DTO de entrada para solicitar la compra de boletos.
+ *
+ * <p>Agrupa la identificacion del cliente, el evento, la cantidad requerida y
+ * si la compra corresponde a boletos VIP.</p>
+ */
 public class CompraRequestDTO {
     private String clienteId;
     private Long eventoId;

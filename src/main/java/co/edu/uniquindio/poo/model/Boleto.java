@@ -3,6 +3,12 @@ package co.edu.uniquindio.poo.model;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 
+/**
+ * Entidad que representa un boleto comprado para un evento.
+ *
+ * <p>Cada boleto queda asociado a un cliente, a un evento y a un codigo unico
+ * generado durante el proceso de compra.</p>
+ */
 @Entity
 public class Boleto {
     @Id
@@ -21,6 +27,9 @@ public class Boleto {
     @JoinColumn(name = "evento_id")
     private Evento evento;
 
+    /**
+     * Constructor requerido por JPA.
+     */
     public Boleto() {}
 
     // Getters y Setters

@@ -3,6 +3,12 @@ package co.edu.uniquindio.poo.model;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 
+/**
+ * Entidad que representa un evento ofrecido por Eventix.
+ *
+ * <p>Conserva la capacidad total, las boletas disponibles, los precios por tipo
+ * de entrada y el estado activo o cancelado del evento.</p>
+ */
 @Entity
 public class Evento {
     @Id
@@ -17,6 +23,9 @@ public class Evento {
     private double precioVIP;
     private boolean estaActivo;
 
+    /**
+     * Constructor requerido por JPA.
+     */
     public Evento() {}
 
     // Getters y Setters

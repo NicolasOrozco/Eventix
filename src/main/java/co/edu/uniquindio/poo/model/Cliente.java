@@ -3,6 +3,9 @@ package co.edu.uniquindio.poo.model;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
+/**
+ * Entidad que representa a un cliente registrado en Eventix.
+ */
 @Entity
 public class Cliente {
     @Id
@@ -11,7 +14,19 @@ public class Cliente {
     private String email;
     private String telefono;
 
+    /**
+     * Constructor requerido por JPA.
+     */
     public Cliente() {}
+
+    /**
+     * Crea un cliente con los datos basicos usados por el sistema.
+     *
+     * @param id identificacion del cliente.
+     * @param nombre nombre completo.
+     * @param email correo electronico.
+     * @param telefono numero telefonico.
+     */
     public Cliente(String id, String nombre, String email, String telefono) {
         this.id = id;
         this.nombre = nombre;

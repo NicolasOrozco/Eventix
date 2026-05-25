@@ -12,6 +12,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Servicio central de Eventix.
+ *
+ * <p>Coordina las operaciones de eventos y compras de boletos, aplicando las
+ * reglas de negocio antes de persistir los cambios en los repositorios.</p>
+ */
 @Service
 public class EventixService {
 
@@ -19,6 +25,14 @@ public class EventixService {
     private final ClienteRepository clienteRepository;
     private final BoletoRepository boletoRepository;
 
+    /**
+     * Crea el servicio con los repositorios necesarios para consultar y persistir
+     * eventos, clientes y boletos.
+     *
+     * @param eventoRepository repositorio de eventos.
+     * @param clienteRepository repositorio de clientes.
+     * @param boletoRepository repositorio de boletos.
+     */
     public EventixService(EventoRepository eventoRepository, ClienteRepository clienteRepository, BoletoRepository boletoRepository) {
         this.eventoRepository = eventoRepository;
         this.clienteRepository = clienteRepository;
@@ -27,12 +41,21 @@ public class EventixService {
 
     // --- CRUD DE EVENTOS (Módulo 1) ---
 
+    /**
+     * Consulta todos los eventos registrados.
+     *
+     * @return lista completa de eventos persistidos.
+     */
     public List<Evento> listarEventos() {
         return eventoRepository.findAll();
     }
 
     /**
      * Registra un nuevo evento inicializando el stock de boletas al 100% de su capacidad.
+     *
+     * @param evento datos del evento que se desea crear.
+     * @return evento guardado con identificador generado.
+     * @throws IllegalArgumentException si el evento incumple alguna regla de negocio.
      */
     public Evento crearEvento(Evento evento) {
         validarInvariantes(evento);
@@ -46,6 +69,11 @@ public class EventixService {
 
     /**
      * Modifica un evento existente protegiendo el stock de boletas ya vendidas y permitiendo cancelaciones.
+     *
+     * @param id identificador del evento existente.
+     * @param nuevoEvento datos nuevos que reemplazan la informacion editable del evento.
+     * @return evento actualizado.
+     * @throws IllegalArgumentException si el evento no existe o la actualizacion rompe una invariante.
      */
     @Transactional
     public Evento actualizarEvento(Long id, Evento nuevoEvento) {
@@ -80,6 +108,9 @@ public class EventixService {
 
     /**
      * Centralización de validaciones de reglas de negocio e invariantes.
+     *
+     * @param evento evento que se validara antes de crear o actualizar.
+     * @throws IllegalArgumentException si la fecha, capacidad o precios no son validos.
      */
     private void validarInvariantes(Evento evento) {
         // RN-02: La fecha del evento debe ser futura
@@ -97,6 +128,12 @@ public class EventixService {
         }
     }
 
+    /**
+     * Elimina un evento cuando todavia no tiene boletos vendidos.
+     *
+     * @param id identificador del evento que se desea eliminar.
+     * @throws IllegalArgumentException si el evento no existe o ya registra ventas.
+     */
     public void eliminarEvento(Long id) {
         Evento ev = eventoRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Evento no encontrado."));
@@ -109,6 +146,16 @@ public class EventixService {
 
     // --- TRANSACCIÓN PRINCIPAL: COMPRAR BOLETO (Módulo 2) ---
 
+    /**
+     * Procesa la compra de boletos para un cliente y evento existentes.
+     *
+     * <p>La operacion es transaccional: descuenta cupos del evento y crea cada
+     * boleto con codigo unico, precio final y fecha de compra.</p>
+     *
+     * @param request datos de la compra solicitada.
+     * @return boletos generados durante la compra.
+     * @throws IllegalArgumentException si la solicitud incumple limites, referencias o disponibilidad.
+     */
     @Transactional
     public List<Boleto> procesarCompra(CompraRequestDTO request) {
         // Validar límite máximo por cliente (Caso de aceptación 4: Máximo 5 boletas)

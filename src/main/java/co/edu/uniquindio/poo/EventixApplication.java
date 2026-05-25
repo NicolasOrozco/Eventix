@@ -11,13 +11,28 @@ import org.springframework.context.annotation.Bean;
 
 import java.time.LocalDate;
 
+/**
+ * Punto de entrada de la aplicacion Spring Boot de Eventix.
+ */
 @SpringBootApplication
 public class EventixApplication {
 
+    /**
+     * Inicia la aplicacion.
+     *
+     * @param args argumentos de linea de comandos recibidos por Spring Boot.
+     */
     public static void main(String[] args) {
         SpringApplication.run(EventixApplication.class, args);
     }
 
+    /**
+     * Carga datos iniciales para facilitar pruebas manuales del MVP.
+     *
+     * @param clienteRepo repositorio usado para crear clientes de prueba.
+     * @param eventoRepo repositorio usado para crear eventos de prueba.
+     * @return tarea que Spring ejecuta al arrancar la aplicacion.
+     */
     @Bean
     CommandLineRunner cargarDatosDePrueba(ClienteRepository clienteRepo, EventoRepository eventoRepo) {
         return args -> {
@@ -49,6 +64,17 @@ public class EventixApplication {
         };
     }
 
+    /**
+     * Crea y persiste un evento activo de demostracion.
+     *
+     * @param repo repositorio de eventos.
+     * @param nombre nombre visible del evento.
+     * @param fecha fecha programada del evento.
+     * @param lugar ubicacion del evento.
+     * @param cap capacidad total y boletas iniciales disponibles.
+     * @param pGen precio de boleto general.
+     * @param pVip precio de boleto VIP.
+     */
     private void crearEventoDemo(EventoRepository repo, String nombre, LocalDate fecha, String lugar, double cap, double pGen, double pVip) {
         Evento e = new Evento();
         e.setNombre(nombre);
