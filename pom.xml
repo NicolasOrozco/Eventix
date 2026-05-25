@@ -10,7 +10,7 @@
         <version>4.0.6</version> <relativePath/> </parent>
 
     <groupId>co.edu.uniquindio.poo</groupId>
-    <artifactId>untitled</artifactId>
+    <artifactId>TechParkUq</artifactId>
     <version>1.0-SNAPSHOT</version>
     <name>eventix</name>
     <description>MVP Eventix para Ingeniería de Software UQ</description>
