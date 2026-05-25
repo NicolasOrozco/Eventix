@@ -109,6 +109,13 @@
                     <label class="block text-xs font-semibold uppercase text-gray-500 mb-1">Precio VIP ($):</label>
                     <input type="number" id="evPrecioVip" required class="w-full p-2 border rounded-md outline-none focus:border-emerald-500">
                 </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-500 mb-1">Estado del Evento:</label>
+                    <select id="evEstado" class="w-full p-2 border rounded-md outline-none focus:border-emerald-500 bg-white font-medium">
+                        <option value="true">🟢 Activo / Habilitado</option>
+                        <option value="false">🔴 Cancelado / Inactivo</option>
+                    </select>
+                </div>
                 <div class="md:col-span-3 flex justify-end gap-2 pt-2">
                     <button type="button" onclick="resetFormEvento()" class="px-4 py-2 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 font-medium rounded-md transition">Limpiar</button>
                     <button type="submit" class="px-5 py-2 text-sm text-white bg-emerald-600 hover:bg-emerald-700 font-bold rounded-md shadow transition">Guardar Registro</button>
@@ -286,6 +293,7 @@
         hideAlert();
 
         const id = document.getElementById("eventoId").value;
+        // Modifica esta sección dentro de la función guardarEvento(e)
         const bodyObj = {
             nombre: document.getElementById("evNombre").value.trim(),
             fecha: document.getElementById("evFecha").value,
@@ -293,7 +301,7 @@
             capacidad: parseFloat(document.getElementById("evCapacidad").value),
             precioGeneral: parseFloat(document.getElementById("evPrecioGen").value),
             precioVIP: parseFloat(document.getElementById("evPrecioVip").value),
-            estaActivo: true
+            estaActivo: document.getElementById("evEstado").value === "true" // <--- Línea corregida
         };
 
         const url = id ? `${API_BASE}/eventos/${id}` : `${API_BASE}/eventos`;
@@ -330,6 +338,7 @@
         document.getElementById("evCapacidad").value = ev.capacidad;
         document.getElementById("evPrecioGen").value = ev.precioGeneral;
         document.getElementById("evPrecioVip").value = ev.precioVIP;
+        document.getElementById("evEstado").value = ev.estaActivo ? "true" : "false";
 
         document.getElementById("formGestionTitulo").innerText = "📝 Modificar Evento Existente";
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -357,6 +366,7 @@
         document.getElementById("formEvento").reset();
         document.getElementById("eventoId").value = "";
         document.getElementById("formGestionTitulo").innerText = "➕ Registrar Nuevo Evento de Negocio";
+        document.getElementById("evEstado").value = "true";
     }
 </script>
 </body>
